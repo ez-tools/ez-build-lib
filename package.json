@@ -8,7 +8,7 @@
   "browser": "./dist/test.umd.js",
   "scripts": {
     "lint": "standard",
-    "publish": "npm run lint && ez-build-lib publish ."
+    "publish": "npm run lint && node ./ez-build-lib.js publish ."
   },
   "repository": {
     "type": "git",
