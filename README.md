@@ -4,24 +4,24 @@
 ![ez-build-lib](http://imgs.xkcd.com/comics/tools.png)
 
 ```
-Usage: ez-build-lib [options] [command]
+  Usage: ez-build-lib [options] [command]
 
 
-Commands:
+  Commands:
 
-  init <dir>     Sets up your project. Attention: This will mess up your package.json and bower.json files!
-  deploy         Deploys your project to npm & bower
-  build <entry>  Builds your project
-  test           Tests your project
-  dev            Watch files and continuously test & build the project
-  *
+    init <entry>   Sets reasonable properties in the package.json, .gitignore, and bower.json files (optional)
+    build <entry>  Builds your project
+    build:watch    Builds the project whenever a file changes
+    publish <dir>  Publish the project including distribution files:
+                   Build > version bump > commit > create git tag > publish to npm
+    *
 
-A command line tool to pack your ES2015 library
+  A command line tool to pack ES2015+ libraries
 
-Options:
+  Options:
 
-  -h, --help     output usage information
-  -V, --version  output the version number
+    -h, --help     output usage information
+    -V, --version  output the version number
 
 
   Example:
@@ -35,8 +35,10 @@ Options:
       "jsnext:main": "./dist/test.mjs",
       "browser": "./dist/test.umd.js",
       "scripts": {
+        "lint": "standard",
         "build": "ez-build-lib build src/test.js",
-        "watch": "ez-build-lib watch src/test.js"
+        "build:watch": "ez-build-lib watch src/test.js",
+        "publish": "npm run lint && npm run build && ez-build-lib publish ."
         ..
       }
     ..
@@ -47,10 +49,14 @@ Options:
       "main": "./dist/test.umd.js"
     ..
 
+    Updated .gitignore
+
+    ..
+      ./dist/
+    ..
+
     It is encouraged to use `npm run <cmd>` from now on:
 
     $ npm run build
     $ npm run build:watch % for development
-
-
 ```

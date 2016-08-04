@@ -1,6 +1,6 @@
 {
   "name": "ez-build-lib",
-  "version": "1.0.0-alpha.0",
+  "version": "0.0.0",
   "description": "A command line tool to pack ES2015+ libraries",
   "bin": "ez-build-lib.js",
   "main": "./dist/test.cjs.js",
