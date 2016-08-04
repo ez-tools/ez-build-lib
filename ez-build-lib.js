@@ -259,6 +259,7 @@ program
       exit(`Unable to checkout branch 'master':\n\n${stdout}\n\n${stderr}`)
     } else {
       console.log('✓ Checked out master branch')
+      process.exit(0)
     }
   }))
 
