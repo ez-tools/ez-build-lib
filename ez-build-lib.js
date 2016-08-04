@@ -209,26 +209,27 @@ program
       console.log('✓ Detached head')
     }
 
-    // add dist files (only if dist directory exists)
-    ;[err] = yield fs.access(path.join(dir, 'dist'), fs.F_OK, getCallback())
-    if (!err) {
+    // check if dist files exist
+    var [distributionFilesExist] = yield fs.access(path.join(dir, 'dist'), fs.F_OK, getCallback())
+    if (!distributionFilesExist) {
+      // add dist files
       ;[err, stdout, stderr] = yield exec('git add ./dist/* -f', opts, getCallback())
       if (err) {
         exit(`Unable to add dist files:\n\n${stdout}\n\n${stderr}`)
       } else {
         console.log('✓ Added dist files to index')
       }
+
+      // commit dist files
+      ;[err, stdout, stderr] = yield exec(`git commit -am "Publish v${p.version} -- added dist files"`, opts, getCallback())
+      if (err) {
+        exit(`Unable to commit dist files:\n\n${stdout}\n\n${stderr}`)
+      } else {
+        console.log('✓ Committed dist files')
+      }
     }
 
-    // commit dist files
-    ;[err, stdout, stderr] = yield exec(`git commit -am "Publish v${p.version} -- added dist files"`, opts, getCallback())
-    if (err) {
-      exit(`Unable to commit dist files:\n\n${stdout}\n\n${stderr}`)
-    } else {
-      console.log('✓ Committed dist files')
-    }
-
-    // commit dist files
+    // tag releasefiles
     ;[err, stdout, stderr] = yield exec(`git tag v${p.version} -m "${message}"`, opts, getCallback())
     if (err) {
       exit(`Unable to tag commit:\n\n${stdout}\n\n${stderr}`)
