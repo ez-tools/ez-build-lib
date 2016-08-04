@@ -23,6 +23,7 @@
   "dependencies": {
     "babel-preset-es2015-rollup": "^1.1.1",
     "commander": "^2.9.0",
+    "ez-async": "^1.0.0-alpha.1",
     "load-json-file": "^2.0.0",
     "rollup": "^0.34.3",
     "rollup-plugin-babel": "^2.6.1",
