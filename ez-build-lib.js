@@ -17,6 +17,8 @@ var semver = require('semver')
 var loadJsonFile = require('load-json-file')
 var exec = require('child_process').exec
 var async = require('ez-async')
+var autoTransform = require('rollup-plugin-auto-transform')
+
 
 process.on('uncaughtException', function (err) {
   console.error('An exception was thrown: ', err)
@@ -119,12 +121,16 @@ program
 program
   .command('build <entry>')
   .description('Builds your project')
-  .action(function (entry, options) {
-    computeConfig(entry).then(function (config) {
-      runBuildCjs(config)
-      runBuildUmd(config)
-    })
-  })
+  .action(async(function * (getCallback, entry, options) {
+    var [err, config] = yield computeConfig(entry)
+    //runBuildCjs(config)
+    // runBuildUmd(config)
+    var testLocation = './src/runTests.js'
+    ;[err] = yield fs.access(testLocation, fs.W_OK, getCallback())
+    if (!err) {
+      runBuildTest(testLocation)
+    }
+  }))
 
 program
   .command('build:watch')
@@ -273,12 +279,18 @@ var runBuildCjs = function runBuildCjs (config) {
   }).then(function (bundle) {
     cjsBundle = bundle
 
-    bundle.write({
-      moduleName: config.name,
-      format: 'cjs',
-      dest: config.cjs,
-      sourceMap: true
-    })
+    try {
+      bundle.write({
+        moduleName: config.name,
+        format: 'cjs',
+        dest: config.cjs,
+        sourceMap: true
+      })
+    } catch (err) {
+      exit(err)
+    }
+  }, function (err) {
+    console.error(err)
   })
 }
 
@@ -302,19 +314,76 @@ var runBuildUmd = function runBuildUmd (config) {
       json(),
       babel({
         exclude: 'node_modules/**',
-        presets: ['es2015-rollup'],
+        presets: [
+          [ 'es2015', { "modules": false } ]
+        ],
+        plugins: [ 'external-helpers' ],
         babelrc: false
       }),
       uglify()
     ]
   }).then(function (bundle) {
     umdBundle = bundle
-    bundle.write({
-      moduleName: config.name,
-      format: 'umd',
-      dest: config.umd,
-      sourceMap: true
-    })
+    try {
+      bundle.write({
+        moduleName: config.name,
+        format: 'umd',
+        dest: config.umd,
+        sourceMap: true
+      })
+    } catch (err) {
+      exit(err)
+    }
+  }, function (err) {
+    console.error(err)
+  })
+}
+
+var testBundle = null
+var runBuildTest = function runBuildTest (testLocation) {
+  rollup.rollup({
+    sourceMap: true,
+    entry: testLocation,
+    cache: testBundle,
+    plugins: [
+      autoTransform(),
+      builtins(),
+      nodeResolve({
+        jsnext: true,
+        main: true,
+        browser: true
+      }),
+      commonjs({
+        ignoreGlobal: true,
+        include: ['node_modules/**'],
+        // exclude: ["node_modules/rollup-plugin-node-builtins/**"],
+        // exclude: ['node_modules/rollup-plugin-node-globals/**', './node_modules/process-es6/browser.js']
+      }),
+      globals(),
+      json(),
+      babel({
+        exclude: 'node_modules/**',
+        presets: [
+          [ 'es2015', { modules : false } ]
+        ],
+        plugins: [ 'external-helpers' ],
+        babelrc: false
+      })
+    ]
+  }).then(function (bundle) {
+    testBundle = bundle
+    try {
+      bundle.write({
+        moduleName: 'runTests',
+        format: 'iife',
+        dest: './runTests.js',
+        sourceMap: true
+      })
+    } catch (err) {
+      exit(err)
+    }
+  }, function (err) {
+    console.error(err)
   })
 }
 
